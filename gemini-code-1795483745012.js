@@ -1,0 +1,100 @@
+function openBodyModal(id = null) {
+            const record = id ? db.bodyRecords.find(r => r.id === id) : { date: new Date().toISOString().split('T')[0], weight: '', waist: '', abdomen: '', hip: '', thighs: '', arms: '', notes: '' };
+            const modal = document.getElementById('modal-container');
+            const content = document.getElementById('modal-content');
+
+            // Garante que o ID seja tratado de forma segura no atributo onsubmit
+            const safeId = id ? `'${id}'` : `''`;
+
+            content.innerHTML = `
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100">${id ? 'Editar Medidas' : 'Novo Registro Corporal'}</h3>
+                    <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+                </div>
+                <form onsubmit="saveBodyRecord(event, ${safeId})" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-500 mb-1">Data</label>
+                        <input type="date" id="body-date" value="${record.date}" required class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-rose-500">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-500 mb-1">Peso (${db.profile.unit})</label>
+                            <input type="number" step="0.1" id="body-weight" value="${record.weight}" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-rose-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-500 mb-1">Cintura (cm)</label>
+                            <input type="number" step="0.1" id="body-waist" value="${record.waist}" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-rose-500">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-500 mb-1">Abdômen (cm)</label>
+                            <input type="number" step="0.1" id="body-abdomen" value="${record.abdomen}" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-rose-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-500 mb-1">Quadril (cm)</label>
+                            <input type="number" step="0.1" id="body-hip" value="${record.hip}" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-rose-500">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-500 mb-1">Coxas (cm)</label>
+                            <input type="number" step="0.1" id="body-thighs" value="${record.thighs}" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-rose-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-500 mb-1">Braços (cm)</label>
+                            <input type="number" step="0.1" id="body-arms" value="${record.arms}" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-rose-500">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-500 mb-1">Observações Pessoais</label>
+                        <textarea id="body-notes" rows="2" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-rose-500">${record.notes}</textarea>
+                    </div>
+                    <div class="flex justify-end space-x-3 pt-3">
+                        <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-xl text-sm font-medium text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700">Cancelar</button>
+                        <button type="submit" class="bg-rose-500 hover:bg-rose-600 text-white px-5 py-2 rounded-xl text-sm font-semibold shadow-md">Salvar</button>
+                    </div>
+                </form>
+            `;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            lucide.createIcons();
+        }
+
+        function saveBodyRecord(e, id) {
+            e.preventDefault();
+            const record = {
+                id: id && id !== "" ? id : 'body_' + Date.now(),
+                date: document.getElementById('body-date').value,
+                weight: document.getElementById('body-weight').value,
+                waist: document.getElementById('body-waist').value,
+                abdomen: document.getElementById('body-abdomen').value,
+                hip: document.getElementById('body-hip').value,
+                thighs: document.getElementById('body-thighs').value,
+                arms: document.getElementById('body-arms').value,
+                notes: document.getElementById('body-notes').value
+            };
+
+            if(id && id !== "") {
+                const idx = db.bodyRecords.findIndex(r => r.id === id);
+                if(idx !== -1) db.bodyRecords[idx] = record;
+            } else {
+                db.bodyRecords.push(record);
+            }
+
+            saveData();
+            closeModal();
+            renderCurrentView();
+            showToast('Registro corporal salvo com sucesso!');
+        }
+
+        function editBodyRecord(id) { openBodyModal(id); }
+
+        function deleteBodyRecord(id) {
+            // Removido o 'confirm()' estrito caso o navegador/ambiente bloqueie popups de confirmação,
+            // ou mantido de forma segura garantindo a execução do filtro.
+            db.bodyRecords = db.bodyRecords.filter(r => r.id !== id);
+            saveData();
+            renderCurrentView();
+            showToast('Registro excluído com sucesso.', 'info');
+        }
